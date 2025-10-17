@@ -91,16 +91,6 @@ Presentation → Repository → Data Sources (Remote API + Local DB)
 
 ---
 
-## Instalación
-
-### Requisitos
-- Android Studio Narwhal 4+ (2025.1.4)
-- JDK 21
-- Android SDK 26+
-- API Key de Pexels
-
----
-
 ## Consideraciones de Implementación
 
 ### Manejo de Estado
@@ -116,9 +106,6 @@ El modo offline es básico: solo muestra datos previamente cacheados. No hay sin
 - Debounce reduce llamadas a API
 
 ---
-
-## Testing
-
 ### Pruebas Manuales Realizadas
 
 **Cache Funcional**
