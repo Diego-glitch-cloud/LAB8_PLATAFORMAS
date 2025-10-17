@@ -306,12 +306,14 @@ private fun performSearch(
 ) {
     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
         try {
+            android.util.Log.d("PexelsScreen", "Iniciando búsqueda: query=$query, page=$page")
             onLoading(true)
             val result = repository.searchPhotos(query, page, perPage = 15)
 
             kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
                 result.fold(
                     onSuccess = { searchResult ->
+                        android.util.Log.d("PexelsScreen", "Búsqueda exitosa: ${searchResult.photos.size} fotos, hasNext=${searchResult.hasNextPage}, fromCache=${searchResult.fromCache}")
                         onSuccess(
                             searchResult.photos,
                             searchResult.hasNextPage,
@@ -319,9 +321,15 @@ private fun performSearch(
                         )
                     },
                     onFailure = { exception ->
+                        android.util.Log.e("PexelsScreen", "Error en búsqueda: ${exception.message}", exception)
                         onError("Error: ${exception.message}")
                     }
                 )
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("PexelsScreen", "Excepción inesperada: ${e.message}", e)
+            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                onError("Error inesperado: ${e.message}")
             }
         } finally {
             onLoading(false)

@@ -94,19 +94,31 @@ class PhotoRepository(
 
         } catch (e: Exception) {
             Log.e(TAG, "Error en búsqueda: ${e.message}", e)
+            Log.e(TAG, "Tipo de error: ${e.javaClass.simpleName}")
 
-            // Fallback: intentar caché aunque sea antiguo
-            val cachedPhotos = photoDao.getPhotosByQueryAndPage(normalizedQuery, page)
-            if (cachedPhotos.isNotEmpty()) {
-                Log.d(TAG, "Usando caché antiguo por error de red")
-                Result.success(
-                    SearchResult(
-                        photos = cachedPhotos.map { it.toPhoto() },
-                        hasNextPage = false,
-                        fromCache = true
+            // Solo usar cache en errores de red reales, no en otros errores
+            val isNetworkError = e is java.net.UnknownHostException ||
+                    e is java.net.SocketTimeoutException ||
+                    e is java.io.IOException
+
+            if (isNetworkError) {
+                Log.w(TAG, "Error de red detectado, intentando cache")
+                val cachedPhotos = photoDao.getPhotosByQueryAndPage(normalizedQuery, page)
+                if (cachedPhotos.isNotEmpty()) {
+                    Log.d(TAG, "Usando caché por error de red")
+                    Result.success(
+                        SearchResult(
+                            photos = cachedPhotos.map { it.toPhoto() },
+                            hasNextPage = false,
+                            fromCache = true
+                        )
                     )
-                )
+                } else {
+                    Result.failure(e)
+                }
             } else {
+                // Otros errores (como 401) no deberían caer en cache
+                Log.e(TAG, "Error no relacionado con red: ${e.message}")
                 Result.failure(e)
             }
         }
