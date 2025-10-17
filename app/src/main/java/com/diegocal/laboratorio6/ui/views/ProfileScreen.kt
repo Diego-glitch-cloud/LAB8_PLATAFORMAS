@@ -82,7 +82,7 @@ fun ProfileScreen(
                     )
                     Spacer(Modifier.height(4.dp))
                     Text(
-                        "pexels.user@example.com",
+                        "Diego Andre",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

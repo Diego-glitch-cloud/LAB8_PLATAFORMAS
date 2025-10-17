@@ -1,8 +1,6 @@
 package com.diegocal.laboratorio6.database.dao
 
-import androidx.paging.PagingSource
 import androidx.room.*
-import androidx.room.Insert
 import com.diegocal.laboratorio6.database.entities.PhotoEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -25,17 +23,27 @@ interface PhotoDao {
 
     /**
      * Obtiene fotos para una query específica, ordenadas por página.
-     * Retorna PagingSource para integración con Paging 3.
+     * Retorna Flow para observar cambios.
      */
     @Query("""
         SELECT * FROM photos 
         WHERE queryKey = :queryKey 
         ORDER BY pageIndex ASC, id ASC
     """)
-    fun getPhotosByQueryPaging(queryKey: String): PagingSource<Int, PhotoEntity>
+    fun getPhotosByQueryFlow(queryKey: String): Flow<List<PhotoEntity>>
 
     /**
-     * Obtiene fotos para una query y página específicas (sin paging).
+     * Obtiene fotos para una query específica (suspending).
+     */
+    @Query("""
+        SELECT * FROM photos 
+        WHERE queryKey = :queryKey 
+        ORDER BY pageIndex ASC, id ASC
+    """)
+    suspend fun getPhotosByQuery(queryKey: String): List<PhotoEntity>
+
+    /**
+     * Obtiene fotos para una query y página específicas.
      * Útil para verificar si una página ya está en caché.
      */
     @Query("""
@@ -44,6 +52,21 @@ interface PhotoDao {
         ORDER BY id ASC
     """)
     suspend fun getPhotosByQueryAndPage(queryKey: String, page: Int): List<PhotoEntity>
+
+    /**
+     * Obtiene fotos con límite y offset (paginación manual).
+     */
+    @Query("""
+        SELECT * FROM photos 
+        WHERE queryKey = :queryKey 
+        ORDER BY pageIndex ASC, id ASC
+        LIMIT :limit OFFSET :offset
+    """)
+    suspend fun getPhotosByQueryPaginated(
+        queryKey: String,
+        limit: Int,
+        offset: Int
+    ): List<PhotoEntity>
 
     /**
      * Cuenta cuántas fotos hay para una query específica.
@@ -80,10 +103,10 @@ interface PhotoDao {
     fun getFavoritePhotos(): Flow<List<PhotoEntity>>
 
     /**
-     * PagingSource para favoritos (útil si hay muchos favoritos).
+     * Obtiene todas las fotos favoritas (suspending).
      */
     @Query("SELECT * FROM photos WHERE isFavorite = 1 ORDER BY updatedAt DESC")
-    fun getFavoritePhotosPaging(): PagingSource<Int, PhotoEntity>
+    suspend fun getFavoritePhotosList(): List<PhotoEntity>
 
     /**
      * Verifica si una foto es favorita.

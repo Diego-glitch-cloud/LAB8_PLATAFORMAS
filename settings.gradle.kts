@@ -21,4 +21,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "Laboratorio6"
 include(":app")
+//include(":app", ":data:model")
+
  

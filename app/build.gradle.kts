@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("org.jetbrains.kotlin.kapt")
+    id("com.google.devtools.ksp")
 }
 
 val localProps = Properties().apply {
@@ -56,6 +57,7 @@ android {
 dependencies {
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.02.00"))
+  //  implementation(project(":data:model"))
 
     // Compose básico
     implementation("androidx.compose.ui:ui")
@@ -93,4 +95,14 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation(platform("androidx.compose:compose-bom:2024.02.00"))
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+
+    val room_version = "2.6.1"
+
+    implementation("androidx.room:room-runtime:$room_version")
+    annotationProcessor("androidx.room:room-compiler:$room_version")
+
+    ksp("androidx.room:room-compiler:$room_version")
+
+    implementation("androidx.room:room-ktx:$room_version")
+
 }
