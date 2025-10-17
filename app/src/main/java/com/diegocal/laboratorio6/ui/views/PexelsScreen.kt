@@ -32,7 +32,6 @@ fun PexelsScreen(
     navController: NavController,
     themeState: ThemeState
 ) {
-    // Inicializar repositorio
     val context = LocalContext.current
     val database = remember { AppDatabase.getDatabase(context) }
     val repository = remember {
@@ -45,7 +44,6 @@ fun PexelsScreen(
 
     val scope = rememberCoroutineScope()
 
-    // Estado del UI
     var isLoading by remember { mutableStateOf(false) }
     var photos by remember { mutableStateOf(emptyList<Photo>()) }
     var errorMessage by rememberSaveable { mutableStateOf<String?>(null) }
@@ -53,14 +51,11 @@ fun PexelsScreen(
     var currentPage by rememberSaveable { mutableStateOf(1) }
     var hasNextPage by remember { mutableStateOf(true) }
     var isFromCache by remember { mutableStateOf(false) }
+    var isReallyOffline by remember { mutableStateOf(false) }
 
-    // Búsquedas recientes
     val recentSearches by repository.getRecentSearches().collectAsState(initial = emptyList())
-
-    // Favoritos (para mostrar badge o indicador)
     val favorites by repository.getFavoritePhotos().collectAsState(initial = emptyList())
 
-    // Debounce para la búsqueda
     val searchFlow = remember { snapshotFlow { searchText } }
     LaunchedEffect(searchFlow) {
         searchFlow
@@ -78,15 +73,18 @@ fun PexelsScreen(
                             photos = newPhotos
                             hasNextPage = hasNext
                             isFromCache = fromCache
+                            isReallyOffline = false
                             errorMessage = null
                         },
-                        onError = { errorMessage = it }
+                        onError = {
+                            errorMessage = it
+                            isReallyOffline = true
+                        }
                     )
                 }
             }
     }
 
-    // Cargar modo offline al inicio si no hay conexión
     LaunchedEffect(Unit) {
         if (photos.isEmpty()) {
             val cachedPhotos = repository.getCachedPhotosForLastSearch()
@@ -97,7 +95,6 @@ fun PexelsScreen(
         }
     }
 
-    // Scroll infinito
     val listState = rememberLazyStaggeredGridState()
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -105,7 +102,7 @@ fun PexelsScreen(
             lastVisibleItemIndex != null && lastVisibleItemIndex >= photos.size - 5
         }
             .collect { shouldLoadMore ->
-                if (shouldLoadMore && !isLoading && hasNextPage && !isFromCache) {
+                if (shouldLoadMore && !isLoading && hasNextPage && !isReallyOffline) {
                     performSearch(
                         repository = repository,
                         query = searchText,
@@ -114,10 +111,14 @@ fun PexelsScreen(
                         onSuccess = { newPhotos, hasNext, _ ->
                             photos = photos + newPhotos
                             hasNextPage = hasNext
+                            isReallyOffline = false
                             currentPage++
                             errorMessage = null
                         },
-                        onError = { errorMessage = it }
+                        onError = {
+                            errorMessage = it
+                            isReallyOffline = true
+                        }
                     )
                 }
             }
@@ -129,7 +130,7 @@ fun PexelsScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text("Fotos de Pexels")
-                        if (isFromCache) {
+                        if (isReallyOffline) {
                             Spacer(Modifier.width(8.dp))
                             Surface(
                                 color = MaterialTheme.colorScheme.secondaryContainer,
@@ -145,7 +146,6 @@ fun PexelsScreen(
                     }
                 },
                 actions = {
-                    // Badge de favoritos
                     if (favorites.isNotEmpty()) {
                         BadgedBox(
                             badge = {
@@ -170,7 +170,6 @@ fun PexelsScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // Barra de búsqueda
             OutlinedTextField(
                 value = searchText,
                 onValueChange = { searchText = it },
@@ -189,7 +188,6 @@ fun PexelsScreen(
                     .padding(16.dp)
             )
 
-            // Búsquedas recientes (chips horizontales)
             if (recentSearches.isNotEmpty()) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 16.dp),
@@ -205,7 +203,6 @@ fun PexelsScreen(
                 }
             }
 
-            // Manejo de estados de la UI
             when {
                 isLoading && photos.isEmpty() -> {
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -249,7 +246,6 @@ fun PexelsScreen(
                     }
                 }
                 else -> {
-                    // Grilla de fotos
                     LazyVerticalStaggeredGrid(
                         columns = StaggeredGridCells.Fixed(2),
                         modifier = Modifier.fillMaxSize(),
@@ -276,7 +272,6 @@ fun PexelsScreen(
                             )
                         }
 
-                        // Indicador de carga al final
                         if (isLoading && hasNextPage) {
                             item {
                                 Box(
