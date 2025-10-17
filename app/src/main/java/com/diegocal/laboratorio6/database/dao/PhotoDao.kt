@@ -2,6 +2,7 @@ package com.diegocal.laboratorio6.database.dao
 
 import androidx.paging.PagingSource
 import androidx.room.*
+import androidx.room.Insert
 import com.diegocal.laboratorio6.database.entities.PhotoEntity
 import kotlinx.coroutines.flow.Flow
 
