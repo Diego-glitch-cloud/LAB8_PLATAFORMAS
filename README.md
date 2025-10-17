@@ -6,6 +6,7 @@ Aplicación Android que integra la API de Pexels con persistencia local mediante
 **Carné:** 241263  
 **Institución:** Universidad del Valle de Guatemala  
 **Curso:** Plataformas Móviles - Laboratorio 8
+**Enlace de Youtube:** https://youtube.com/shorts/DOCGKS-wDcc
 
 ---
 
